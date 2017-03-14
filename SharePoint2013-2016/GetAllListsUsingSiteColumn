@@ -1,7 +1,3 @@
-<#
-.SYNOPSIS
-Get all the library details where the site column has been reffered.
-#>
 
 [CmdletBinding()]
 param
