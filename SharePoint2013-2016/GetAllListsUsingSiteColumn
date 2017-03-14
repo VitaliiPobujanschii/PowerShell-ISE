@@ -1,0 +1,54 @@
+<#
+.SYNOPSIS
+Get all the library details where the site column has been reffered.
+#>
+
+[CmdletBinding()]
+param
+(
+    [Parameter(Mandatory = $true, HelpMessage="Required Site Url")]
+    [string]
+    $Url,
+    [Parameter(Mandatory = $true, HelpMessage="Required - List Column or Site Column")]
+    [string]
+    $Field
+)
+
+# Gets all webs in site collection
+function GetWebs
+{ 
+    $separator = ","
+    $sites = Get-SPOWeb
+	Get-SPOSubWebs -Web $sites -Recurse | foreach { $subIds += $_.ServerRelativeUrl + $separator }
+	#$option = [System.StringSplitOptions]::RemoveEmptyEntries
+
+	return $subIds.Split($separator)
+}
+
+try
+{
+	GetWebs | foreach { 
+		Write-Host "Really working hard in site $_" -ForegroundColor Yellow   
+        $cWeb = Get-SPOWeb -Identity $_         
+		$allLists = Get-SPOList -Web $cWeb 
+        foreach ($list in $allLists) {
+            $gFields = Get-SPOField -List $list -Web $cWeb 
+            $gField = $gFields | ? {$_.Title -eq $Field}
+            if ( $gField -ne $null) {
+                Write-Host "-------------------------------------------------------------"
+                Write-Host "Title:"$gField.Title
+                Write-Host "ID:"$gField.Id
+                Write-Host "Library:"$list.Title
+                Write-Host "Library ID:"$list.Id
+                Write-Host "Web:"$cWeb.Url                    
+            }                 
+        }
+	}
+}
+catch
+{
+    Write-Host -ForegroundColor Red "Exception occurred!" 
+    Write-Host -ForegroundColor Red "Exception Type: $($_.Exception.GetType().FullName)"
+    Write-Host -ForegroundColor Red "Exception Message: $($_.Exception.Message)"
+}
+
