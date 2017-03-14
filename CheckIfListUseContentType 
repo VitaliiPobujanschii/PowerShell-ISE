@@ -1,0 +1,48 @@
+[CmdletBinding()]
+param
+(
+    [Parameter(Mandatory=$true, HelpMessage="Required Site Url")]
+    [string]
+    $siteUrl,
+    [Parameter(Mandatory=$true, HelpMessage="Required List Name")]
+    [string]
+    $listName
+)
+
+try {
+
+   $web = get-spoweb
+
+   $web.Context.Load($web.Lists)
+
+   $web.Context.ExecuteQuery()
+
+   $lists = $web.Lists
+
+   foreach ($list in $lists) {
+        
+        $web.Context.Load($list.ContentTypes)
+        $web.Context.ExecuteQuery()
+
+        if($list.Title -eq $listName) {
+
+            if($list.ContentTypesEnabled -ne $false) {
+                    
+              
+                Write-Host $list.Title "don't use a ct"
+               
+            }
+            else {
+
+                Write-Host $list.Title "use a ct"
+            }
+        }
+   }
+  
+}
+
+catch {
+        Write-Host -ForegroundColor Red "Exception occurred!" 
+        Write-Host -ForegroundColor Red "Exception Type: $($_.Exception.GetType().FullName)"
+        Write-Host -ForegroundColor Red "Exception Message: $($_.Exception.Message)"
+}
