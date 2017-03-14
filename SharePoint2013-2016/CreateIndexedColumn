@@ -1,0 +1,290 @@
+<#  
+Create one file on you computer under name "CreateIndexedColumn.txt".   
+Copy code below and paste it into the file.  
+Right click on the file and choose "Rename" then change .txt to .ps1  
+Optional - Save this file on your computer under name "CreateIndexedColumn.ps1"  
+#>  
+  
+[CmdletBinding()]  
+param   
+(  
+    [Parameter(Mandatory = $true, HelpMessage="Required Site Url")]  
+    [string]  
+    $siteUrl,  
+    [Parameter(Mandatory = $true, HelpMessage="Required - List Name")]  
+    [string]  
+    $ListTargetName,  
+    [Parameter(Mandatory = $true, HelpMessage="Required - Set 'Display Name' of Field")]  
+    [string]  
+    $fieldDisplayName,  
+    [Parameter(Mandatory = $true, HelpMessage="Required - Set 'Internal Name' of Field (without break spaces")]  
+    [string]  
+    $fieldInternalName  
+)     
+  
+# SharePoint Online      
+Connect-SPOnline -Url $siteUrl -Credential give  
+  
+function actionMessage {  
+                        Write-Host `n  
+                        Write-Host "Adding the field '$fieldDisplayName'" -ForegroundColor Yellow  
+}  
+  
+function resultMessage {  
+                        Write-Host `n  
+                        write-host "Field '$fieldDisplayName' created successfully!" -ForegroundColor Blue -BackgroundColor White   
+}  
+# Generates dialog window with function keys and description of choice - Add field or Not  
+function addField {  
+  
+                $title = "Add field"  
+  
+                $message = "Select one type for field - '$fieldDisplayName'"  
+  
+                $text = New-Object System.Management.Automation.Host.ChoiceDescription "&Text", `  
+                "Specifies a single line of text."  
+                  
+                $choice = New-Object System.Management.Automation.Host.ChoiceDescription "&Choice", `  
+                "Specifies users of a SharePoint site."  
+  
+                $dateTime = New-Object System.Management.Automation.Host.ChoiceDescription "&DateTime", `  
+                "Specifies date and time values."                  
+  
+               # $counter = New-Object System.Management.Automation.Host.ChoiceDescription "&Counter", `  
+               # "Specifies an integer used for internal ID fields."  
+  
+                $lookup = New-Object System.Management.Automation.Host.ChoiceDescription "&Lookup", `  
+                "Specifies references to values in other lists."  
+  
+                $boolean = New-Object System.Management.Automation.Host.ChoiceDescription "&Boolean", `  
+                "Specifies Boolean values that are stored in the database as 1 or 0."  
+  
+                $number = New-Object System.Management.Automation.Host.ChoiceDescription "&Number", `  
+                "Specifies floating point numbers."  
+  
+                $currency = New-Object System.Management.Automation.Host.ChoiceDescription "&Currency", `  
+                "Specifies currency values formatted based on a specific locale."  
+  
+                $integer = New-Object System.Management.Automation.Host.ChoiceDescription "&Integer", `  
+                "Specifies positive or negative integer values."  
+  
+                $options = [System.Management.Automation.Host.ChoiceDescription[]]($Text, $Choice, $DateTime, $Lookup, $Boolean, $Number, $Currency, $Integer)  
+  
+                $result = $host.ui.PromptForChoice($title, $message, $options, 0)   
+            
+                switch ($result)  
+                {                        
+                    # Choice 'Text'  
+                    0 {  
+                       actionMessage  
+  
+                       # Creates a field for target list  
+                       Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Text  -AddToDefaultView -Required  
+                         
+                       resultMessage  
+                       # Calls the function 'indexField'   
+                        indexField  
+                    }   
+  
+                    # Choice 'Choice'  
+                    1 {  
+                       actionMessage  
+                       # Creates a field for target list  
+                       Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Choice  -AddToDefaultView -Required  
+                         
+                       resultMessage   
+  
+                       # Calls the function 'indexField'   
+                       indexField  
+                    }  
+   
+                    # Choice 'DateTime'  
+                    2 {  
+                        actionMessage  
+  
+                        # Creates a field for target list  
+                        Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type DateTime  -AddToDefaultView -Required  
+                          
+                        resultMessage  
+  
+                        # Calls the function 'indexField'   
+                        indexField  
+                    }   
+  
+                    # Choice 'Lookup'  
+                    3 {  
+                       actionMessage  
+  
+                       # Creates a field for target list  
+                       Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Lookup  -AddToDefaultView -Required  
+                         
+                       resultMessage  
+  
+                       # Calls the function 'indexField'   
+                       indexField  
+                    }   
+  
+                    # Choice 'Boolean'  
+                    4 {  
+                       actionMessage  
+  
+                       # Creates a field for target list  
+                       Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Boolean  -AddToDefaultView -Required  
+                         
+                       resultMessage   
+  
+                       # Calls the function 'indexField'   
+                       indexField  
+                    }   
+  
+                    # Choice 'Number'  
+                    5 {  
+                       actionMessage  
+  
+                       # Creates a field for target list  
+                       Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Number  -AddToDefaultView -Required  
+                         
+                       resultMessage   
+  
+                       # Calls the function 'indexField'   
+                       indexField  
+                    }   
+  
+                    # Choice 'Currency'  
+                    6 {  
+                       actionMessage  
+  
+                       # Creates a field for target list  
+                       Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Currency  -AddToDefaultView -Required  
+                         
+                       resultMessage  
+  
+                       # Calls the function 'indexField'   
+                       indexField  
+                    }   
+  
+                    # Choice 'Integer'  
+                    7 {  
+                         actionMessage  
+  
+                        # Creates a field for target list  
+                        Add-SPOField -list $ListTargetName -DisplayName $fieldDisplayName -InternalName $fieldInternalName -Type Integer  -AddToDefaultView -Required  
+                         
+  ResultMessage  
+  
+                        # Calls the function 'indexField'   
+                        indexField  
+                    }  
+                }                                
+}  
+  
+function indexField {  
+  
+                    $title = "Index the field"  
+                    $message = "Do you want to index the field '$fieldDisplayName'?"  
+  
+                    $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", `  
+                    "Adds the field to the site."  
+  
+                    $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", `  
+                    "End"  
+  
+                    $options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)  
+  
+                    $result = $host.ui.PromptForChoice($title, $message, $options, 0)   
+                            
+                    Write-Host "-------------------------------------------------------------" -ForegroundColor Yellow  
+  
+                switch ($result)  
+                {   
+                    # Choice 'Yes'  
+                    0 {  
+                        # SharePoint Online   
+                        $username = Read-Host -Prompt "Enter Username"   
+                          
+                        $password = Read-Host -Prompt "Enter password" -AsSecureString  
+                        $credentials = New-Object Microsoft.SharePoint.Client.SharePointOnlineCredentials($username, $password)  
+                        $ctx = New-Object Microsoft.SharePoint.Client.ClientContext($siteUrl)  
+                        $ctx.Credentials = $credentials    
+  
+                        $web = $ctx.Web  
+                           
+                        $ctx.Load($web)     
+                        $ctx.Load($web.Lists)     
+                        $ctx.ExecuteQuery()   
+  
+                        # Updates the list/library title  
+                        $list = $web.Lists.GetByTitle($ListTargetName)  
+  
+                        $fieldName = $fieldDisplayName  
+  
+                        # Updates the Field name and get it indexed  
+                        $field = $list.Fields.GetByTitle($fieldDisplayName)  
+                        $field.Indexed = $true  
+                        $field.Update()  
+                        $ctx.ExecuteQuery()  
+                          
+                        Write-Host "-------------------------------------------------------------" -ForegroundColor Green  
+                        write-host "Field '$fieldName' indexed successfully!" -ForegroundColor Blue -BackgroundColor White   
+                        Write-Host `n  
+                    }   
+                      
+                    # Choice 'No'  
+                    1 {  
+                        break # Ends execution of file 'CreateIndexedColumn.ps1'  
+                    }   
+                }  
+}  
+  
+try {  
+        #/ Gets 'Title', 'Server Relative Url' and 'Id' of root site  
+        $cWeb = Get-SPOWeb -Identity $_   
+  
+        Write-Host "-------------------------------------------------------------" -ForegroundColor Green  
+        Write-Host "Really working hard in list '$ListTargetName'" -ForegroundColor Yellow  
+  
+        #/ Gets table with 'Title', 'Internal Name' and 'Id' of all fields available to the list  
+        $gFields = Get-SPOField -List $ListTargetName  
+          
+        $nameMatching = $null  
+  
+        # Loops through all available fields name and compare them to given 'Field Name'  
+        foreach ($gField in $gFields){  
+  
+                if ($gField.Title -eq $fieldDisplayName) {   
+                  
+                    $nameMatching = $gField  
+                        Write-Host `n      
+                        Write-Host "List '$ListTargetName' already has one field with name '$fieldDisplayName'" -ForegroundColor Red  
+                        Write-Host "---------------------------------------------------------"  
+                        Write-Host  "Title:"$gField.Title -ForegroundColor Cyan  
+                        Write-Host  "Type:"$gField.FieldTypeKind -ForegroundColor Cyan  
+                        Write-Host  "ID:"$gField.Id       -ForegroundColor Cyan  
+                        Write-Host  "Library:"$list.Title -ForegroundColor Cyan  
+                        Write-Host  "Library ID:"$list.Id -ForegroundColor Cyan  
+                        Write-Host  "Web:"$cWeb.Url       -ForegroundColor Cyan  
+                        Write-Host  "Idexed:"$gField.Indexed    -ForegroundColor Cyan  
+  
+                        if ($gField.Indexed -eq $true) {  
+  
+                            break # Ends execution of file  
+                        }  
+                        else {  
+                              
+                            # Calls the function 'indexField'  
+                            indexField  
+                        }  
+                  }                      
+        }  
+        if ($nameMatching -eq $null) {  
+              
+            addField  # Calls function 'addField'  
+        }  
+}  
+  
+catch {  
+        Write-Host -ForegroundColor Red "Exception occurred!"   
+        Write-Host -ForegroundColor Red "Exception Type: $($_.Exception.GetType().FullName)"  
+        Write-Host -ForegroundColor Red "Exception Message: $($_.Exception.Message)"  
+}  
+ 
