@@ -1,0 +1,191 @@
+[CmdletBinding()]
+param
+(
+    [Parameter(Mandatory=$true, HelpMessage="Required Site Url")]
+    [string]
+    $siteUrl,
+    [Parameter(Mandatory=$true, HelpMessage="Required List Name")]
+    [string]
+    $listName
+)
+
+Write-Host "------------------------------------------------" -ForegroundColor Yellow
+
+# Global variable
+$listCT = $null
+
+# SharePoint Online 
+$username = Read-Host -Prompt "Enter Username"                         
+$password = Read-Host -Prompt "Enter password" -AsSecureString
+$credentials = New-Object Microsoft.SharePoint.Client.SharePointOnlineCredentials($username, $password)
+#Connect-SPOnline -Url $siteUrl -Credential $credentials
+$ctx = New-Object Microsoft.SharePoint.Client.ClientContext($siteUrl)
+$ctx.Credentials = $credentials 
+
+try {
+
+   $web = get-spoweb
+
+   $web.Context.Load($web.Lists)
+
+   $web.Context.ExecuteQuery()
+
+   $lists = $web.Lists
+
+   foreach ($list in $lists) {
+
+        if($list.Title -eq $listName) {
+
+            if($list.ContentTypesEnabled -eq $false) {
+                    
+                Write-Host $list.Title "don't use a content type" -ForegroundColor Green -BackgroundColor White
+               
+            }
+            else {   
+                # Assigns the value
+                $listCT = $list
+
+                Write-Host $list.Title "use a content type" -ForegroundColor Red -BackgroundColor White
+                Write-Host `n
+
+                # Calls function
+                contentTypes
+            }
+        }
+   }
+  
+}
+
+catch {
+        Write-Host -ForegroundColor Red "Exception occurred!" 
+        Write-Host -ForegroundColor Red "Exception Type: $($_.Exception.GetType().FullName)"
+        Write-Host -ForegroundColor Red "Exception Message: $($_.Exception.Message)"
+}
+
+
+function contentTypes {
+
+    $title = "Content types"
+    $message = "Do you want to know which content types uses of list '$listName'?"
+
+    $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", `
+    "Figure out which content types uses of the list"
+
+    $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", `
+    "End"
+
+    $cancel = New-Object System.Management.Automation.Host.ChoiceDescription "&Cancel", `
+    "Cancel list content types"
+
+    $options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no, $cancel)
+
+    $result = $host.ui.PromptForChoice($title, $message, $options, 0) 
+                          
+    Write-Host "-------------------------------------------------------------" -ForegroundColor Yellow
+
+    switch ($result)
+    { 
+        # Choice 'Yes'
+        0 { 
+
+            $web = $ctx.Web
+                         
+            $ctx.Load($web)   
+            $ctx.Load($web.Lists) 
+                        
+            try
+            {
+                $ctx.ExecuteQuery()
+                Write-Host "Authenticateed to SharePoint Online Tenant site $siteUrl and get ClientContext object succeefully" -foregroundcolor black -backgroundcolor Green
+            }
+            catch
+            {
+                Write-Host "Not able to authenticateed to SharePoint Online $_.Exception.Message" -foregroundcolor black -backgroundcolor Red
+                return
+            } 
+                          
+                        
+            # 
+            $listContentTypes = $web.Lists.GetByTitle($listName).ContentTypes
+            $ctx.Load($listContentTypes)
+            try
+            {
+                $ctx.ExecuteQuery()
+                Write-Host "Getting $listName list content types" -foregroundcolor black -backgroundcolor yellow
+                Write-Host `n
+            }
+            catch
+            {
+                Write-Host "Not able to get content types - $_.Exception.Message" -foregroundcolor black -backgroundcolor Red
+                return
+            } 
+                
+            foreach ($ct in $listContentTypes)
+            {
+                Write-Host "-------------------------------------------------------------" -ForegroundColor Green
+                Write-Host "Type name is -" $ct.Name  -ForegroundColor Yellow
+                Write-Host "Type group is -" $ct.Group  -ForegroundColor Yellow
+            }
+            # Call function 
+            cancelContentType
+        } 
+                    
+        # Choice 'No'
+        1 {
+            break # Ends execution of file 
+        } 
+
+        # Choice 'Cancel'
+        2 {
+            # Call function for canceling content types
+            cancelContentType
+        }
+    }
+} 
+
+function cancelContentType {
+
+    $title = "Cancel content types"
+    $message = "Do you want to cancel management of content types for list '$listName'?"
+
+    $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", `
+    "Cancel content types uses of the list"
+
+    $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", `
+    "End"
+
+    $options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
+
+    $result = $host.ui.PromptForChoice($title, $message, $options, 0) 
+                          
+    Write-Host "-------------------------------------------------------------" -ForegroundColor Yellow
+
+    switch ($result)
+    { 
+     # Choice 'Yes'
+     0 {
+        try
+        {
+
+            $listCT.ContentTypesEnabled = $false
+
+            $listCT.Update()
+
+            Write-Host "Management of content types canceled succeefully" -foregroundcolor black -backgroundcolor Green
+         }
+        catch
+        {
+                Write-Host "Not able to cancel content types for the list - $_.Exception.Message" -foregroundcolor black -backgroundcolor Red
+                return
+            } 
+        } 
+                    
+        # Choice 'No'
+        1 {
+            break # Ends execution of file
+        } 
+    }
+}
+                          
+
+                
