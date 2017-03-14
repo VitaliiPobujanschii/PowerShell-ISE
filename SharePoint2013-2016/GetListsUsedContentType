@@ -1,0 +1,20 @@
+
+   $web = get-spoweb
+
+   $web.Context.Load($web.Lists)
+
+   $web.Context.ExecuteQuery()
+
+   $lists = $web.Lists
+
+   foreach ($list in $lists) {
+        
+           $web.Context.Load($list.ContentTypes)
+           $web.Context.ExecuteQuery()
+
+          if($list.ContentTypesEnabled -eq $true) {
+                    
+                    $list
+          }
+
+   }
